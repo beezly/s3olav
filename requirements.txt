@@ -1,0 +1,3 @@
+py-clamav
+boto3
+requests
