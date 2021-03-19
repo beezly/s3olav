@@ -1,9 +1,13 @@
 import boto3
 import requests
 import tempfile
+import os
 from py_clamav import ClamAvScanner
 
 scanner = ClamAvScanner()
+scanner.load()
+
+print("boto3 version:"+boto3.__version__)
 
 def lambda_handler(event, context):
     print(event)
@@ -18,16 +22,32 @@ def lambda_handler(event, context):
     with tempfile.NamedTemporaryFile(mode='w+b',buffering=0) as scanfile:
         scanfile.write(response.content)
 
-        infected, vir_name = scanner.scan_file(scanfile.name)
+        scanfile.flush()
+        os.fsync(scanfile.fileno()) 
+        scanfile.seek(0)
 
+        infected, vir_name = scanner.scan_file(scanfile.name)
+        print(f'infected: {infected}')
+        print(f'vir_name: {vir_name}')
+
+        s3 = boto3.client('s3') 
         if infected:
-            return {'status_code': 403}
+            print('file was infected')
+            s3.write_get_object_response(
+                Body='',
+                RequestRoute=request_route,
+                RequestToken=request_token,
+                StatusCode=403,
+                ErrorCode='Forbidden',
+                ErrorMessage='Forbidden')
+            
         else:
+            print('file was not infected')
             # Write object back to S3 Object Lambda
             s3 = boto3.client('s3')
             s3.write_get_object_response(
-                Body=tempfile,
+                Body=scanfile,
                 RequestRoute=request_route,
                 RequestToken=request_token)
 
-            return {'status_code': 200}
+    return {'status_code': 200}

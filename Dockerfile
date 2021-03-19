@@ -5,5 +5,6 @@ RUN amazon-linux-extras install epel
 RUN yum -y install clamav
 COPY lambda.py ./
 COPY requirements.txt ./ 
-RUN pip install -U -r requirements.txt
+RUN pip install -U -r requirements.txt -t .
 RUN freshclam
+CMD ["lambda.lambda_handler"]
