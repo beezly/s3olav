@@ -21,4 +21,4 @@ The lambda takes about 20 seconds to start from cold. This is because it libclam
 
 The lambda won't deal well with large files (over c. 500MB). This is because it does not stream content through the lambda. Instead it downloads to a temporary file, scans and then returns the object to the caller. It's possible that this could be made more efficient if I can work out how to get libclamav to scan a stream.
 
-
+The build process pulls in the latest anti-virus definitions at runtime. If you want to update them, rebuild the container
